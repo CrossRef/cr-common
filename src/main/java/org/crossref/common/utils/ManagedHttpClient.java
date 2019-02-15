@@ -7,6 +7,7 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -74,7 +75,7 @@ public final class ManagedHttpClient implements IHttpClient {
     private String scheme = null;
     private String host = null;
     private int port = 0;
-    private Map<String, String> commonHeaders;
+    private Map<String, String> commonHeaders = new HashMap<>();
     String urlRoot = null;
     int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
     int socketTimeout = DEFAULT_SOCKET_TIMEOUT;
@@ -88,9 +89,8 @@ public final class ManagedHttpClient implements IHttpClient {
      * @param scheme Http scheme, either "http" or "https"
      * @param host Server host name, or IP address
      * @param port Server port
-     * @param stdHdeaders Standard headers to be included in all requests
      */
-    public ManagedHttpClient(String scheme, String host, int port, Map<String, String> commonHeaders) {
+    public ManagedHttpClient(String scheme, String host, int port) {
         this.scheme = scheme;
         this.host = host;
         this.port = port;
@@ -130,6 +130,17 @@ public final class ManagedHttpClient implements IHttpClient {
      */
     public void setActivityTimeout(int timeout) {
         this.activityTimeout = timeout;
+    }
+    
+    /**
+     * Set common headers to be included in all requests.
+     * @param commonHeaders 
+     */
+    public void setCommonHeaders(Map<String, String> commonHeaders) {
+        commonHeaders.clear();
+        if (commonHeaders != null) {
+            this.commonHeaders.putAll(commonHeaders);
+        }
     }
     
     /**
