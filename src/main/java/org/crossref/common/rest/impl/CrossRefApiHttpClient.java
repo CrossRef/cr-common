@@ -21,10 +21,10 @@ public class CrossRefApiHttpClient implements ICrossRefApiClient {
     /**
      * Constructor accepts generic http connection object
      * 
-     * @param apiClient 
+     * @param httpClient 
      */
-    public CrossRefApiHttpClient(IHttpClient apiClient) {
-        this.httpClient = apiClient;
+    public CrossRefApiHttpClient(IHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     @Override
