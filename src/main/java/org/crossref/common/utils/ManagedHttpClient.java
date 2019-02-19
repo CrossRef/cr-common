@@ -55,7 +55,7 @@ import org.apache.http.message.LineParser;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.CharArrayBuffer;
 import org.apache.http.util.EntityUtils;
-import org.apache.logging.log4j.Logger;
+import org.apache.log4j.Logger;
 import org.crossref.common.rest.api.IHttpClient;
 
 /**

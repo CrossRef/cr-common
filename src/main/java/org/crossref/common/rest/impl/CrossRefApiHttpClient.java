@@ -2,8 +2,8 @@ package org.crossref.common.rest.impl;
 
 import java.io.IOException;
 import java.util.Map;
+import org.apache.log4j.Logger;
 
-import org.apache.logging.log4j.Logger;
 import org.crossref.common.utils.LogUtils;
 import org.crossref.common.rest.api.ICrossRefApiClient;
 import org.crossref.common.rest.api.IHttpClient;

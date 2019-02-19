@@ -34,7 +34,7 @@ page at http://checkstyle.sourceforge.net/config.html
     </appender>
 
     <appender name="filelog" class="org.apache.log4j.RollingFileAppender">
-        <param name="file" value="log/debug.log" />
+        <param name="file" value="../test.log" />
         <param name="append" value="true" />
         <param name="maxBackupIndex" value="10" />
         <param name="maxFileSize" value="1024KB" />
@@ -55,7 +55,7 @@ page at http://checkstyle.sourceforge.net/config.html
     </logger>
 
     <root>
-        <level value="info" />
+        <level value="DEBUG" />
         <appender-ref ref="async" />
     </root>
 </log4j:configuration>

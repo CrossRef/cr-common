@@ -2,7 +2,7 @@ package org.crossref.common.utils;
 
 import java.io.File;
 import java.net.URL;
-import org.apache.logging.log4j.Logger;
+import org.apache.log4j.Logger;
 
 /**
  * Defines static utility methods for working with classpath resources.
