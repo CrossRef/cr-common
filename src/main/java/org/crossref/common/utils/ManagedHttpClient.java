@@ -94,7 +94,6 @@ public final class ManagedHttpClient implements IHttpClient {
         this.scheme = scheme;
         this.host = host;
         this.port = port;
-        this.commonHeaders = commonHeaders;
         
         StringBuilder buf = new StringBuilder();
         buf.append(this.scheme).append("://").append(this.host);
