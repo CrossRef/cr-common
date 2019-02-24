@@ -3,6 +3,9 @@ package org.crossref.common.rest.impl;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.log4j.Logger;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 import org.crossref.common.utils.LogUtils;
 import org.crossref.common.rest.api.ICrossRefApiClient;
@@ -28,9 +31,18 @@ public class CrossRefApiHttpClient implements ICrossRefApiClient {
     }
 
     @Override
-    public String getWorks(Map<String, Object> args) throws IOException {
+    public JSONArray getWorks(Map<String, Object> args) throws IOException {
         log.debug("CR API Client getWorks");
         
-        return httpClient.get("works", args, null);
+        String worksJson = httpClient.get("works", args, null);
+        
+        // Parse the response
+        try {
+	    JSONObject json = new JSONObject(worksJson);
+            return json.getJSONObject("message").optJSONArray("items");
+	} catch (JSONException ex) {
+            log.error("Error parsing API response string: " + worksJson, ex);
+	    return new JSONArray();
+	}
     }
 }

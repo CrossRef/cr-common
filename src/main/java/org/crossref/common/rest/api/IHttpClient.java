@@ -16,7 +16,7 @@ public interface IHttpClient {
      * @param args Query arguments to be appended to the get request URL
      * @param headers Optional headers to be passed in to the call
      * 
-     * @return A String response
+     * @return A string response
      * @throws IOException 
      */
     String get(String path, Map<String, Object> args, Map<String, String> headers) throws IOException;

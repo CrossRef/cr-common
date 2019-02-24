@@ -136,7 +136,7 @@ public final class ManagedHttpClient implements IHttpClient {
      * @param commonHeaders 
      */
     public void setCommonHeaders(Map<String, String> commonHeaders) {
-        commonHeaders.clear();
+        this.commonHeaders.clear();
         if (commonHeaders != null) {
             this.commonHeaders.putAll(commonHeaders);
         }
