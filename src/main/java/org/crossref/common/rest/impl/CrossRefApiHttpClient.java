@@ -32,8 +32,6 @@ public class CrossRefApiHttpClient implements ICrossRefApiClient {
 
     @Override
     public JSONArray getWorks(Map<String, Object> args) throws IOException {
-        log.debug("CR API Client getWorks");
-        
         String worksJson = httpClient.get("works", args, null);
         
         // Parse the response

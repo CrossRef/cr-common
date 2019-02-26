@@ -322,7 +322,7 @@ public final class ManagedHttpClient implements IHttpClient {
         }
 
         // Make the http call
-        CloseableHttpResponse response = httpClient.execute(httpget);
+        CloseableHttpResponse response = httpClient.execute(httpget);        
         
         // Extract/return contents of call
         return EntityUtils.toString(response.getEntity());
