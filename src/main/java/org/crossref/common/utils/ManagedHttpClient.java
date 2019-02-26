@@ -322,10 +322,21 @@ public final class ManagedHttpClient implements IHttpClient {
         }
 
         // Make the http call
+        Timer timer = new Timer();
+        timer.start();
+
         CloseableHttpResponse response = httpClient.execute(httpget);        
         
+        timer.stop();
+        log.debug("httpClient.execute: " + timer.elapsedMs());
+        timer.start();
+        
         // Extract/return contents of call
-        return EntityUtils.toString(response.getEntity());
+        String resp = EntityUtils.toString(response.getEntity());
+        timer.stop();
+        log.debug("EntityUtils.toString: " + timer.elapsedMs());        
+        
+        return resp;
     }
     
     /**

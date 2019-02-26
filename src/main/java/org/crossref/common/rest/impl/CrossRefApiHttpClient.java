@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.crossref.common.utils.LogUtils;
 import org.crossref.common.rest.api.ICrossRefApiClient;
 import org.crossref.common.rest.api.IHttpClient;
+import org.crossref.common.utils.Timer;
 
 /**
  * HTTP Implementation of the CrossRefApiClient interface.
@@ -33,11 +34,19 @@ public class CrossRefApiHttpClient implements ICrossRefApiClient {
     @Override
     public JSONArray getWorks(Map<String, Object> args) throws IOException {
         String worksJson = httpClient.get("works", args, null);
-        
+
         // Parse the response
         try {
+            Timer timer = new Timer();
+            timer.start();
 	    JSONObject json = new JSONObject(worksJson);
-            return json.getJSONObject("message").optJSONArray("items");
+            JSONArray arr = json.getJSONObject("message").optJSONArray("items");
+            timer.stop();
+            
+            log.debug("new.JSONObject: " + timer.elapsedMs()); 
+                        
+            return arr;
+            
 	} catch (JSONException ex) {
             log.error("Error parsing API response string: " + worksJson, ex);
 	    return new JSONArray();

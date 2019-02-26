@@ -11,17 +11,27 @@ public class Timer {
     private Calendar startTime;
     private Calendar stopTime;
 
+    /**
+     * Start the timer.
+     */
     public void start() {
         startTime = Calendar.getInstance();
         stopTime = startTime;
     }
 
+    /**
+     * Stop the timer.
+     */
     public void stop() {
         stopTime = Calendar.getInstance();
     }
 
+    /**
+     * Get Elapsed time as a computed string of the form "N mins, N secs, N ms"
+     * @return A formatted string
+     */
     public String elapsedTime() {
-        long millis = stopTime.getTimeInMillis() - startTime.getTimeInMillis();
+        long millis = elapsedMs();
         long secs = millis / 1000;
 
         millis -= (secs * 1000);
@@ -32,4 +42,12 @@ public class Timer {
 
         return String.format("%02d mins, %02d secs, %03d ms", mins, secs, millis);
     } 
+    
+    /**
+     * Get elapsed time in milliseconds.
+     * @return Number of milliseconds
+     */
+    public long elapsedMs() {
+        return stopTime.getTimeInMillis() - startTime.getTimeInMillis();
+    }
 }
