@@ -69,7 +69,6 @@ public final class ManagedHttpClient implements IHttpClient {
     private static final int DEFAULT_CONNECT_TIMEOUT = 30000;
     private static final int DEFAULT_SOCKET_TIMEOUT = 30000;
     private static final int DEFAULT_ACTIVITY_TIMEOUT = 30000;
-    private static final String URL_ROOT_FMT = "%s://%s";
     
     private CloseableHttpClient httpClient = null;
     private String scheme = null;
@@ -324,14 +323,12 @@ public final class ManagedHttpClient implements IHttpClient {
         // Make the http call
         Timer timer = new Timer();
         timer.start();
-
         CloseableHttpResponse response = httpClient.execute(httpget);        
-        
         timer.stop();
         log.debug("httpClient.execute: " + timer.elapsedMs());
-        timer.start();
         
         // Extract/return contents of call
+        timer.start();
         String resp = EntityUtils.toString(response.getEntity());
         timer.stop();
         log.debug("EntityUtils.toString: " + timer.elapsedMs());        
