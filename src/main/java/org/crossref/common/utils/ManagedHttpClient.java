@@ -17,6 +17,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.AuthSchemes;
@@ -74,6 +75,8 @@ public final class ManagedHttpClient implements IHttpClient {
     private String scheme = null;
     private String host = null;
     private int port = 0;
+    private int maxConnections = 20;
+    private int maxConnRequests = 5;
     private Map<String, String> commonHeaders = new HashMap<>();
     String urlRoot = null;
     int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
@@ -102,8 +105,6 @@ public final class ManagedHttpClient implements IHttpClient {
         buf.append("/");
         
         urlRoot = buf.toString();
-        
-        initialize();
     }
 
     /**
@@ -128,6 +129,22 @@ public final class ManagedHttpClient implements IHttpClient {
      */
     public void setActivityTimeout(int timeout) {
         this.activityTimeout = timeout;
+    }
+
+    /**
+     * Set the maximum number of total connections.
+     * @param maxConnections 
+     */
+    public void setMaxConnections(int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
+    
+     /**
+     * Set the maximum number of concurrent requests per connection. 
+     * @param maxConnections 
+     */
+    public void setMaxConnRequests(int maxConnRequests) {
+        this.maxConnRequests = maxConnRequests;
     }
     
     /**
@@ -250,9 +267,9 @@ public final class ManagedHttpClient implements IHttpClient {
 
         // Configure total max or per route limits for persistent connections
         // that can be kept in the pool or leased by the connection manager.
-        connManager.setMaxTotal(5);
-        connManager.setDefaultMaxPerRoute(1);
-        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(host, port)), 1);
+        connManager.setMaxTotal(maxConnections);
+        connManager.setDefaultMaxPerRoute(maxConnRequests);
+        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(host, port)), maxConnRequests);
 
         // Create global request configuration
         RequestConfig defaultRequestConfig = RequestConfig.custom()
@@ -269,6 +286,7 @@ public final class ManagedHttpClient implements IHttpClient {
         this.httpClient = HttpClients.custom()
             .setConnectionManager(connManager)
             .setDefaultRequestConfig(defaultRequestConfig)
+            .disableRedirectHandling()
             .build();        
     }
     
@@ -304,9 +322,8 @@ public final class ManagedHttpClient implements IHttpClient {
                 return null;
         }
         
-        String[] validArgs = {"rows", "query.bibliographic"};
-
-        HttpGet httpget = new HttpGet(urlRoot + path + formatQueryArgs(args, validArgs));
+        HttpGet httpget = new HttpGet(urlRoot + path + formatQueryArgs(args));
+        httpget.setProtocolVersion(HttpVersion.HTTP_1_1);
         
         // Add any standard and call-specific headers
         if (commonHeaders != null) {
@@ -333,6 +350,8 @@ public final class ManagedHttpClient implements IHttpClient {
         timer.stop();
         log.debug("EntityUtils.toString: " + timer.elapsedMs());        
         
+        response.close();
+        
         return resp;
     }
     
@@ -343,20 +362,18 @@ public final class ManagedHttpClient implements IHttpClient {
         return httpClient != null;
     }
     
-    protected String formatQueryArgs(Map<String, Object> args, String[] valid) {
+    protected String formatQueryArgs(Map<String, Object> args) {
         StringBuilder sb = new StringBuilder("");
 		
-        for (String key : valid) {
-            if (args.containsKey(key)) {
-                try {
-                    sb.append((sb.length() >  0) ? '&' : '?')
-                    .append(key).append("=")
-                    .append(URLEncoder.encode(args.get(key).toString(), "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    // Warn and fail quietly
-                    log.warn("Error encoding value: " + args.get(key));
-                }
-            }
+        for (Entry<String, Object> e : args.entrySet()) {
+            try {
+                sb.append((sb.length() >  0) ? '&' : '?')
+                .append(e.getKey()).append("=")
+                .append(URLEncoder.encode(e.getValue().toString(), "UTF-8"));
+            } catch (UnsupportedEncodingException ex) {
+                // Warn and fail quietly
+                log.warn("Error encoding value: " + e.getValue());
+            }            
         }
 
         return sb.toString();
