@@ -1,13 +1,10 @@
 package org.crossref.common.utils;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -56,8 +53,6 @@ import org.apache.http.message.LineParser;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.CharArrayBuffer;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
-import org.crossref.common.rest.api.IHttpClient;
 
 /**
  * Implements a robust http client connection based on Apache's http
@@ -66,25 +61,12 @@ import org.crossref.common.rest.api.IHttpClient;
  *
  * @author joe.aparo
  */
-public final class ManagedHttpClient implements IHttpClient {
-    private static final int DEFAULT_CONNECT_TIMEOUT = 30000;
-    private static final int DEFAULT_SOCKET_TIMEOUT = 30000;
-    private static final int DEFAULT_ACTIVITY_TIMEOUT = 30000;
+public final class ManagedHttpClient extends AbstractHttpClient {
     
     private CloseableHttpClient httpClient = null;
-    private String scheme = null;
-    private String host = null;
-    private int port = 0;
     private int maxConnections = 20;
     private int maxConnRequests = 5;
-    private Map<String, String> commonHeaders = new HashMap<>();
-    String urlRoot = null;
-    int connectTimeout = DEFAULT_CONNECT_TIMEOUT;
-    int socketTimeout = DEFAULT_SOCKET_TIMEOUT;
-    int activityTimeout = DEFAULT_ACTIVITY_TIMEOUT;
 
-    Logger log = LogUtils.getLogger();
-    
     /**
      * Constructor with scheme/host/port
      * 
@@ -93,42 +75,7 @@ public final class ManagedHttpClient implements IHttpClient {
      * @param port Server port
      */
     public ManagedHttpClient(String scheme, String host, int port) {
-        this.scheme = scheme;
-        this.host = host;
-        this.port = port;
-        
-        StringBuilder buf = new StringBuilder();
-        buf.append(this.scheme).append("://").append(this.host);
-        if (port > 0) {
-            buf.append(":").append(port);
-        }
-        buf.append("/");
-        
-        urlRoot = buf.toString();
-    }
-
-    /**
-     * Set the connection timeout in MS.
-     * @param timeout Timeout value
-     */
-    public void setConnectTimeout(int timeout) {
-        this.connectTimeout = timeout;
-    }
-
-    /**
-     * Set the socket timeout in MS.
-     * @param timeout Timeout value
-     */
-    public void setSocketTimeout(int timeout) {
-        this.socketTimeout = timeout;
-    }
-
-    /**
-     * Set the activity timeout in MS.
-     * @param timeout Timeout value
-     */
-    public void setActivityTimeout(int timeout) {
-        this.activityTimeout = timeout;
+        super(scheme, host, port);
     }
 
     /**
@@ -141,26 +88,16 @@ public final class ManagedHttpClient implements IHttpClient {
     
      /**
      * Set the maximum number of concurrent requests per connection. 
-     * @param maxConnections 
+     * @param maxConnRequests 
      */
     public void setMaxConnRequests(int maxConnRequests) {
         this.maxConnRequests = maxConnRequests;
     }
     
-    /**
-     * Set common headers to be included in all requests.
-     * @param commonHeaders 
-     */
-    public void setCommonHeaders(Map<String, String> commonHeaders) {
-        this.commonHeaders.clear();
-        if (commonHeaders != null) {
-            this.commonHeaders.putAll(commonHeaders);
-        }
-    }
-    
-    /**
+   /**
      * Initialize the http client connection manager based on current settings.
      */
+    @Override
     public void initialize() {
         // Already open
         if (isOpen()) {
@@ -241,10 +178,10 @@ public final class ManagedHttpClient implements IHttpClient {
         // Configure the connection manager to use socket configuration either
         // by default or for a specific host.
         connManager.setDefaultSocketConfig(socketConfig);
-        connManager.setSocketConfig(new HttpHost(host, port), socketConfig);
+        connManager.setSocketConfig(new HttpHost(getHost(), getPort()), socketConfig);
         
         // Validate connections after 1 sec of inactivity
-        connManager.setValidateAfterInactivity(activityTimeout);
+        connManager.setValidateAfterInactivity(getActivityTimeout());
 
         // Create message constraints
         MessageConstraints messageConstraints = MessageConstraints.custom()
@@ -263,21 +200,21 @@ public final class ManagedHttpClient implements IHttpClient {
         // Configure the connection manager to use connection configuration either
         // by default or for a specific host.
         connManager.setDefaultConnectionConfig(connectionConfig);
-        connManager.setConnectionConfig(new HttpHost(host, port), ConnectionConfig.DEFAULT);
+        connManager.setConnectionConfig(new HttpHost(getHost(), getPort()), ConnectionConfig.DEFAULT);
 
         // Configure total max or per route limits for persistent connections
         // that can be kept in the pool or leased by the connection manager.
         connManager.setMaxTotal(maxConnections);
         connManager.setDefaultMaxPerRoute(maxConnRequests);
-        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(host, port)), maxConnRequests);
+        connManager.setMaxPerRoute(new HttpRoute(new HttpHost(getHost(), getPort())), maxConnRequests);
 
         // Create global request configuration
         RequestConfig defaultRequestConfig = RequestConfig.custom()
             .setCookieSpec(CookieSpecs.DEFAULT)
             .setExpectContinueEnabled(true)
-            .setSocketTimeout(socketTimeout)
-            .setConnectTimeout(connectTimeout)
-            .setConnectionRequestTimeout(activityTimeout)
+            .setSocketTimeout(getSocketTimeout())
+            .setConnectTimeout(getConnectTimeout())
+            .setConnectionRequestTimeout(getActivityTimeout())
             .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
             .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC))
             .build();
@@ -301,7 +238,7 @@ public final class ManagedHttpClient implements IHttpClient {
         try {
             this.httpClient.close();
         } catch (IOException e) {
-            log.warn("Error closing http client connection: " + e.getMessage(), e);
+            getLogger().warn("Error closing http client connection: " + e.getMessage(), e);
         }
         
         this.httpClient = null;
@@ -311,10 +248,14 @@ public final class ManagedHttpClient implements IHttpClient {
      * Fetch the content returned at the given path of the http server.
      * 
      * @param path The path, relative to the server root schemd/host/port
+     * @param args Query arguments to be added to the path
+     * @param callHeaders Additional headers to set for the request
+     * 
      * @return A string returned from the path
      * @throws ClientProtocolException
      * @throws IOException 
      */
+    @Override
     public String get(String path, Map<String, Object> args, Map<String, String> callHeaders)
         throws IOException {
         
@@ -322,10 +263,11 @@ public final class ManagedHttpClient implements IHttpClient {
                 return null;
         }
         
-        HttpGet httpget = new HttpGet(urlRoot + path + formatQueryArgs(args));
+        HttpGet httpget = new HttpGet(getUrlRoot() + path + formatQueryArgs(args));
         httpget.setProtocolVersion(HttpVersion.HTTP_1_1);
         
         // Add any standard and call-specific headers
+        Map<String, String> commonHeaders = getCommonHeaders();
         if (commonHeaders != null) {
             for (Entry<String, String> e : commonHeaders.entrySet()) {
                 httpget.addHeader(e.getKey(), e.getValue());
@@ -342,13 +284,13 @@ public final class ManagedHttpClient implements IHttpClient {
         timer.start();
         CloseableHttpResponse response = httpClient.execute(httpget);        
         timer.stop();
-        log.debug("httpClient.execute: " + timer.elapsedMs());
+        getLogger().debug("httpClient.execute: " + timer.elapsedMs());
         
         // Extract/return contents of call
         timer.start();
         String resp = EntityUtils.toString(response.getEntity());
         timer.stop();
-        log.debug("EntityUtils.toString: " + timer.elapsedMs());        
+        getLogger().debug("EntityUtils.toString: " + timer.elapsedMs());        
         
         response.close();
         
@@ -360,22 +302,5 @@ public final class ManagedHttpClient implements IHttpClient {
      */
     private boolean isOpen() {
         return httpClient != null;
-    }
-    
-    protected String formatQueryArgs(Map<String, Object> args) {
-        StringBuilder sb = new StringBuilder("");
-		
-        for (Entry<String, Object> e : args.entrySet()) {
-            try {
-                sb.append((sb.length() >  0) ? '&' : '?')
-                .append(e.getKey()).append("=")
-                .append(URLEncoder.encode(e.getValue().toString(), "UTF-8"));
-            } catch (UnsupportedEncodingException ex) {
-                // Warn and fail quietly
-                log.warn("Error encoding value: " + e.getValue());
-            }            
-        }
-
-        return sb.toString();
     }
 }
