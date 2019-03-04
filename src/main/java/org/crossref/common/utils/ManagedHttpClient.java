@@ -269,30 +269,30 @@ public final class ManagedHttpClient extends AbstractHttpClient {
         // Add any standard and call-specific headers
         Map<String, String> commonHeaders = getCommonHeaders();
         if (commonHeaders != null) {
-            for (Entry<String, String> e : commonHeaders.entrySet()) {
+            commonHeaders.entrySet().forEach((e) -> {
                 httpget.addHeader(e.getKey(), e.getValue());
-            } 
+            }); 
         }
         if (callHeaders != null) {
-            for (Entry<String, String> e : callHeaders.entrySet()) {
+            callHeaders.entrySet().forEach((e) -> {
                 httpget.addHeader(e.getKey(), e.getValue());
-            }
+            });
         }
 
         // Make the http call
         Timer timer = new Timer();
         timer.start();
-        CloseableHttpResponse response = httpClient.execute(httpget);        
-        timer.stop();
-        getLogger().debug("httpClient.execute: " + timer.elapsedMs());
-        
-        // Extract/return contents of call
-        timer.start();
-        String resp = EntityUtils.toString(response.getEntity());
-        timer.stop();
-        getLogger().debug("EntityUtils.toString: " + timer.elapsedMs());        
-        
-        response.close();
+        String resp;
+        try (CloseableHttpResponse response = httpClient.execute(httpget)) {
+            timer.stop();
+            getLogger().debug("httpClient.execute: " + timer.elapsedMs());
+            
+            // Extract/return contents of call
+            timer.start();
+            resp = EntityUtils.toString(response.getEntity());
+            timer.stop();
+            getLogger().debug("EntityUtils.toString: " + timer.elapsedMs());
+        }
         
         return resp;
     }

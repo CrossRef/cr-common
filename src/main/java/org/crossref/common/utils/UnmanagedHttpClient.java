@@ -5,20 +5,16 @@ import java.util.Map;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 
 /**
- * Implements a basic HTTP connection. In this case,
+ * Implements a basic, unmanaged HTTP connection. In this case,
  * a client connection is created anew on each call.
  * 
  * @author joe.aparo
  */
-
-
 public class UnmanagedHttpClient extends AbstractHttpClient {
 
     public UnmanagedHttpClient(String scheme, String host, int port) {
@@ -41,14 +37,14 @@ public class UnmanagedHttpClient extends AbstractHttpClient {
         // Add any standard and call-specific headers
         Map<String, String> commonHeaders = getCommonHeaders();
         if (commonHeaders != null) {
-            for (Map.Entry<String, String> e : commonHeaders.entrySet()) {
+            commonHeaders.entrySet().forEach((e) -> {
                 httpget.addHeader(e.getKey(), e.getValue());
-            } 
+            }); 
         }
         if (headers != null) {
-            for (Map.Entry<String, String> e : headers.entrySet()) {
+            headers.entrySet().forEach((e) -> {
                 httpget.addHeader(e.getKey(), e.getValue());
-            }
+            });
         }
 
         // Make the http call
