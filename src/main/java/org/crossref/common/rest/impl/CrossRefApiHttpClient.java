@@ -35,6 +35,12 @@ public class CrossRefApiHttpClient implements ICrossRefApiClient {
     public JSONArray getWorks(Map<String, Object> args) throws IOException {
         String worksJson = httpClient.get("works", args, null);
 
+        // This shouldn't happen, but sometimes it does. Not
+        if (worksJson == null) {
+            log.warn("CR-API returned null response for arguments. Returning empty result for: " + args.toString());
+            return new JSONArray();
+        }
+        
         // Parse the response
         try {
             Timer timer = new Timer();
@@ -47,7 +53,7 @@ public class CrossRefApiHttpClient implements ICrossRefApiClient {
                         
             return arr;
             
-	} catch (JSONException ex) {
+	} catch (Exception ex) {
             log.error("Error parsing API response string: " + worksJson, ex);
 	    return new JSONArray();
 	}

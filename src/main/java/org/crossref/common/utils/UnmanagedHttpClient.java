@@ -32,6 +32,7 @@ public class UnmanagedHttpClient extends AbstractHttpClient {
             .setDefaultRequestConfig(requestBuilder.build());
         
         HttpClient httpClient = clientBuilder.build();
+
         HttpGet httpget = new HttpGet(getUrlRoot() + path + formatQueryArgs(args));
         
         // Add any standard and call-specific headers
@@ -52,13 +53,14 @@ public class UnmanagedHttpClient extends AbstractHttpClient {
         timer.start();
         HttpResponse response = httpClient.execute(httpget);        
         timer.stop();
-        getLogger().debug("httpClient.execute: " + timer.elapsedMs());
+        getLogger().debug("UnmanagedHttpClient.execute: " + timer.elapsedMs());
         
         // Extract/return contents of call
         timer.start();
         String resp = EntityUtils.toString(response.getEntity());
         timer.stop();
         getLogger().debug("EntityUtils.toString: " + timer.elapsedMs());        
+        
         
         return resp;
     }
