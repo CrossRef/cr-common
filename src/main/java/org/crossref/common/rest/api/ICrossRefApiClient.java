@@ -19,5 +19,5 @@ public interface ICrossRefApiClient {
      * 
      * @throws IOException 
      */
-    public JSONArray getWorks(Map<String, Object> args) throws IOException;
+    public JSONArray getWorks(Map<String, Object> args, Map<String, String> headers) throws IOException;
 }

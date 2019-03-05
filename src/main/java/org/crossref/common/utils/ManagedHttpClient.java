@@ -6,7 +6,6 @@ import java.net.UnknownHostException;
 import java.nio.charset.CodingErrorAction;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import javax.net.ssl.SSLContext;
 import org.apache.http.Consts;

@@ -3,7 +3,9 @@ package org.crossref.common.utils;
 import java.io.IOException;
 import java.util.Map;
 import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -55,6 +57,14 @@ public class UnmanagedHttpClient extends AbstractHttpClient {
         timer.stop();
         getLogger().debug("UnmanagedHttpClient.execute: " + timer.elapsedMs());
         
+        StatusLine status = response.getStatusLine();
+        status.getStatusCode();
+        
+        if (status.getStatusCode() != 200) {
+            throw new HttpResponseException(
+                status.getStatusCode(), status.getReasonPhrase());
+        }
+        
         // Extract/return contents of call
         timer.start();
         String resp = EntityUtils.toString(response.getEntity());
@@ -62,7 +72,7 @@ public class UnmanagedHttpClient extends AbstractHttpClient {
         getLogger().debug("EntityUtils.toString: " + timer.elapsedMs());        
         
         
-        return resp;
+         return resp;
     }
     
 }
