@@ -24,7 +24,11 @@ public class JsonUtils {
      */
     public static JSONArray createJSONArray(String str) {
         
-        if ((str.charAt(0) != '[') || (str.charAt(str.length() -1) != ']')) {
+        // Ignore leading/trailing whitespace
+        String tmp = str.trim();
+        
+        // Check for brackets
+        if ((tmp.charAt(0) != '[') || (tmp.charAt(tmp.length() -1) != ']')) {
             throw new JSONException("Array string does not begin and end with [ and ]");
         }
         
